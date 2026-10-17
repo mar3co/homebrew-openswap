@@ -1,0 +1,93 @@
+cask "openswap" do
+  version "0.2.0"
+
+  # One single-architecture zip per CPU: uv's Python, and so the frozen app,
+  # is built natively on an arm64 and an x86_64 runner.
+  on_arm do
+    sha256 "58859c89666b996eb96ea742d7cb726b6670b7bc968d5917eb2e7673e193277b"
+
+    url "https://github.com/mar3co/openswap/releases/download/v#{version}/OpenSwap-#{version}-arm64.zip"
+  end
+  on_intel do
+    sha256 "57cc451c27bcdca993831031fc3f1de35dadb8c6a1c547af7dda5ec72f518e14"
+
+    url "https://github.com/mar3co/openswap/releases/download/v#{version}/OpenSwap-#{version}-x86_64.zip"
+  end
+
+  name "OpenSwap"
+  desc "Menu bar app for rotating Claude Code and Codex CLI accounts"
+  homepage "https://github.com/mar3co/openswap"
+
+  livecheck do
+    url :url
+    strategy :github_latest
+  end
+
+  depends_on macos: :sonoma
+
+  app "OpenSwap.app"
+  binary "#{appdir}/OpenSwap.app/Contents/MacOS/OpenSwap", target: "openswap"
+
+  # `openswap setup` writes the login LaunchAgent, not this cask, so an
+  # upgrade finds it still there and restarts it on the new app.
+  postflight_steps do
+    run "/bin/sh",
+        args:         ["-c", "launchctl kickstart -k gui/$(id -u)/com.opensoft.openswap.menubar"],
+        must_succeed: false,
+        print_stderr: false
+  end
+
+  # Homebrew runs this on `brew upgrade` and `brew reinstall` too, before it
+  # swaps the app, so `uninstall launchctl:` would drop the login item on
+  # every upgrade. The app reads which brew command started it and only an
+  # uninstall removes its login item, Remote tasks worker and Claude Code
+  # status line (with --zap, its saved logins in the Keychain too). An app
+  # already deleted by hand leaves nothing to run, not a failed uninstall.
+  uninstall script: {
+    executable:   "/bin/sh",
+    args:         [
+      "-c",
+      '[ -x "$0" ] || exit 0; exec "$0" uninstall --homebrew-hook',
+      "#{appdir}/OpenSwap.app/Contents/MacOS/OpenSwap",
+    ],
+    must_succeed: false,
+  }
+
+  # Not the worker's label: `launchctl:` removes a job by label alone, and a
+  # uv install's worker shares it. The hook above removes the app's worker.
+  zap launchctl: [
+        "com.opensoft.openswap.menubar",
+        "com.opensoft.openswap.widget",
+      ],
+      trash:     [
+        "~/Library/Application Support/OpenSwap",
+        "~/Library/Containers/com.opensoft.openswap.widget.extension",
+        "~/Library/Logs/com.opensoft.openswap.menubar.err",
+        "~/Library/Logs/com.opensoft.openswap.menubar.log",
+        "~/Library/Logs/com.opensoft.openswap.widget.err",
+        "~/Library/Logs/com.opensoft.openswap.widget.log",
+        "~/Library/Logs/com.opensoft.openswap.worker.err",
+        "~/Library/Logs/com.opensoft.openswap.worker.log",
+      ]
+
+  # The app finishes setting up on its own (a welcome page with Open at
+  # login), and `openswap setup` does the same from a terminal. The user
+  # runs the first `openswap` on their PATH (HOMEBREW_PATH; brew's own PATH
+  # is not theirs). An older uv install's can come before this cask's,
+  # wherever uv put it, and its setup refuses or points the login item back
+  # at uv, so name this cask's command whenever another one would answer
+  # first.
+  caveats do
+    ours = "#{HOMEBREW_PREFIX}/bin/openswap"
+    first = ENV.fetch("HOMEBREW_PATH", "").split(File::PATH_SEPARATOR)
+               .reject(&:empty?)
+               .map { |dir| File.join(dir, "openswap") }
+               .find { |path| File.file?(path) && File.executable?(path) }
+    openswap = "openswap"
+    openswap = ours if first && !(File.exist?(ours) && File.realpath(first) == File.realpath(ours))
+    <<~EOS
+      Open OpenSwap from Applications to finish setting up, or run:
+        #{openswap} setup
+    EOS
+  end
+end
