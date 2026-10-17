@@ -1,22 +1,22 @@
 cask "openswap" do
-  version "0.2.0"
+  version "0.2.1"
 
   # One single-architecture zip per CPU: uv's Python, and so the frozen app,
   # is built natively on an arm64 and an x86_64 runner.
   on_arm do
-    sha256 "58859c89666b996eb96ea742d7cb726b6670b7bc968d5917eb2e7673e193277b"
+    sha256 "b87dd686187a1c8eba73b2ec477d4569e8483ced7c0b1d0bf2478c9de0ef0099"
 
     url "https://github.com/mar3co/openswap/releases/download/v#{version}/OpenSwap-#{version}-arm64.zip"
   end
   on_intel do
-    sha256 "57cc451c27bcdca993831031fc3f1de35dadb8c6a1c547af7dda5ec72f518e14"
+    sha256 "5fa3f5001969c47951d2e542c311c1e78766236ecadd5b274e450112b7f31e9d"
 
     url "https://github.com/mar3co/openswap/releases/download/v#{version}/OpenSwap-#{version}-x86_64.zip"
   end
 
   name "OpenSwap"
   desc "Menu bar app for rotating Claude Code and Codex CLI accounts"
-  homepage "https://github.com/mar3co/openswap"
+  homepage "https://opensoft.me/swap"
 
   livecheck do
     url :url
