@@ -1,15 +1,15 @@
 cask "openswap" do
-  version "0.2.1"
+  version "0.2.2"
 
   # One single-architecture zip per CPU: uv's Python, and so the frozen app,
   # is built natively on an arm64 and an x86_64 runner.
   on_arm do
-    sha256 "b87dd686187a1c8eba73b2ec477d4569e8483ced7c0b1d0bf2478c9de0ef0099"
+    sha256 "234bd483337bff6db85f3885b50bee83093d4090f3500f156b84911e49b032cc"
 
     url "https://github.com/mar3co/openswap/releases/download/v#{version}/OpenSwap-#{version}-arm64.zip"
   end
   on_intel do
-    sha256 "5fa3f5001969c47951d2e542c311c1e78766236ecadd5b274e450112b7f31e9d"
+    sha256 "490d28847134013ced692b3e4e952a9fb475dc88643e22784e9e9876a0d78015"
 
     url "https://github.com/mar3co/openswap/releases/download/v#{version}/OpenSwap-#{version}-x86_64.zip"
   end
@@ -55,6 +55,10 @@ cask "openswap" do
 
   # Not the worker's label: `launchctl:` removes a job by label alone, and a
   # uv install's worker shares it. The hook above removes the app's worker.
+  # Nor its job state (com.opensoft.openswap in ~/Library/Application
+  # Support, and in ~/Library/Caches for an older worker): a task Homebrew
+  # cannot see may still need its handles and locks, so the hook deletes it
+  # only once none runs.
   zap launchctl: [
         "com.opensoft.openswap.menubar",
         "com.opensoft.openswap.widget",
@@ -68,6 +72,8 @@ cask "openswap" do
         "~/Library/Logs/com.opensoft.openswap.widget.log",
         "~/Library/Logs/com.opensoft.openswap.worker.err",
         "~/Library/Logs/com.opensoft.openswap.worker.log",
+        "~/Library/Preferences/com.opensoft.openswap.menubar.plist",
+        "~/Library/Preferences/com.opensoft.openswap.plist",
       ]
 
   # The app finishes setting up on its own (a welcome page with Open at
