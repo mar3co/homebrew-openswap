@@ -1,15 +1,15 @@
 cask "openswap" do
-  version "0.3.1"
+  version "0.4.0"
 
   # One single-architecture zip per CPU: uv's Python, and so the frozen app,
   # is built natively on an arm64 and an x86_64 runner.
   on_arm do
-    sha256 "8b30e674d2fdf9c899c26b66d11782bd8b426d7db7cf8ed6d637671b8f175c44"
+    sha256 "7e49e482ace10eefb81f889892de9603f075f7588e79e310a75dc3c5440ca160"
 
     url "https://github.com/mar3co/openswap/releases/download/v#{version}/OpenSwap-#{version}-arm64.zip"
   end
   on_intel do
-    sha256 "a2036d8b5cea790a4c0db7dfd1a24e6e024bb3a140b4cdd97305a404dfd4111e"
+    sha256 "3f530386c5e5f9090d966dbc4bd5e1f2b84001e4e5f6efe02796513e77923bb7"
 
     url "https://github.com/mar3co/openswap/releases/download/v#{version}/OpenSwap-#{version}-x86_64.zip"
   end
